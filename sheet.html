@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>주누디자인 실사출력 시트지 다중 견적 계산기 (방안 B 확정)</title>
+  <link rel="manifest" href="./sheet-manifest.json" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <meta name="theme-color" content="#EA580C" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <style>
+    :root {
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --surface-alt: #F8FAFC;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --text-muted: #475569;
+      --text-light: #64748B;
+      --primary: #EA580C;
+      --primary-hover: #C2410C;
+      --primary-soft: #FFF7ED;
+      --primary-border: #FDBA74;
+      --navy: #1F4E78;
+      --blue: #2563EB;
+      --blue-soft: #EFF6FF;
+      --green: #16A34A;
+      --green-soft: #F0FDF4;
+      --amber: #D97706;
+      --amber-soft: #FFFBEB;
+      --red: #DC2626;
+      --red-soft: #FEF2F2;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .topbar {
+      background: #0F172A;
+      color: #FFF;
+      padding: 14px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+    .topbar-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-badge {
+      background: var(--primary);
+      color: #FFF;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 4px 9px;
+      border-radius: 7px;
+    }
+    .brand-title { font-size: 17px; font-weight: 700; margin: 0; }
+    .brand-sub { font-size: 12px; color: #94A3B8; display: block; }
+    .topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-top {
+      background: rgba(255,255,255,0.12);
+      color: #FFF;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-top:hover { background: rgba(255,255,255,0.22); }
+
+    .tabs-wrap { max-width: 1160px; margin: 16px auto 0; padding: 0 14px; }
+    .tabs {
+      display: inline-flex;
+      background: #E2E8F0;
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 120px;
+      border: none;
+      background: transparent;
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .container { max-width: 1160px; margin: 14px auto 48px; padding: 0 14px; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 880px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--text);
+    }
+    .formula-pill {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .unit-toggle {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .unit-toggle button {
+      border: none;
+      background: var(--surface-alt);
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .unit-toggle button.active { background: var(--primary); color: #FFF; }
+
+    .size-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr 0.72fr;
+      gap: 8px;
+      align-items: end;
+    }
+    @media (max-width: 520px) {
+      .size-row { grid-template-columns: 1fr auto 1fr; }
+      .qty-col { grid-column: 1 / -1; }
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .field input, .field select {
+      width: 100%;
+      height: 42px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      background: #FFF;
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.14);
+    }
+    .times-sign {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--text-light);
+      font-size: 16px;
+    }
+
+    .preset-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+
+    .option-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .option-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    @media (max-width: 560px) { .option-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+
+    .opt-card {
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      cursor: pointer;
+      background: #FFF;
+      text-align: left;
+    }
+    .opt-card.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15);
+    }
+    .opt-name { font-size: 13px; font-weight: 800; color: var(--text); display: block; }
+    .opt-desc { font-size: 11px; color: var(--text-light); display: block; margin-top: 2px; }
+
+    .preview-box {
+      background: linear-gradient(145deg, #0F172A, #1E293B);
+      color: #FFF;
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2);
+    }
+    .preview-label { font-size: 12px; color: #94A3B8; font-weight: 600; }
+    .preview-price { font-size: 32px; font-weight: 900; color: #FDBA74; letter-spacing: -0.8px; margin: 3px 0 8px; }
+    .result-subrow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .badge-dark {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #E2E8F0;
+    }
+    .badge-dark strong { color: #FDE68A; }
+
+    .breakdown {
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .bd-row { display: flex; justify-content: space-between; padding: 3px 0; color: #CBD5E1; }
+
+    .btn-add-cart {
+      width: 100%;
+      border: none;
+      background: var(--green);
+      color: #FFF;
+      font-size: 16px;
+      font-weight: 900;
+      padding: 14px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+    }
+    .btn-add-cart:hover { background: #15803D; }
+
+    .btn-primary {
+      border: none;
+      background: var(--primary);
+      color: #FFF;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-kakao {
+      border: none;
+      background: #FEE500;
+      color: #191919;
+      font-size: 14px;
+      font-weight: 900;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-kakao:hover { background: #F5DC00; }
+    .btn-secondary {
+      border: 1.5px solid var(--border);
+      background: #FFF;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { background: var(--surface-alt); }
+    .btn-danger-outline {
+      border: 1.5px solid #FECACA;
+      background: #FEF2F2;
+      color: #DC2626;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .action-btn-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr 0.8fr;
+      gap: 8px;
+    }
+    @media (max-width: 560px) { .action-btn-row { grid-template-columns: 1fr; } }
+
+    .custom-input-box {
+      background: #FFFBF5;
+      border: 2px dashed #E67E22;
+      padding: 13px;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: 1.6fr 1.4fr 0.7fr 1.1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    @media (max-width: 760px) {
+      .custom-input-box { grid-template-columns: 1fr 1fr; }
+      .custom-input-box .btn-add-custom { grid-column: 1 / -1; }
+    }
+    .custom-input-box input {
+      height: 40px;
+      padding: 0 10px;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      width: 100%;
+    }
+    .btn-add-custom {
+      height: 40px;
+      background: #E67E22;
+      color: #FFF;
+      border: none;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .cart-card { border: 2px solid #CBD5E1; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    th, td { border: 1px solid var(--border); padding: 9px 10px; text-align: center; }
+    th { background: #F1F5F9; font-weight: 800; color: var(--text); }
+    tr:nth-child(even) td { background: #FAFBFD; }
+    .td-left { text-align: left; font-weight: 700; }
+    .td-highlight { background: #FFF7ED !important; font-weight: 800; color: #C2410C; }
+
+    .count-input {
+      width: 58px;
+      height: 32px;
+      text-align: center;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .del-btn {
+      background: #EF4444;
+      color: #FFF;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .cart-options {
+      display: grid;
+      grid-template-columns: 1.05fr 1.05fr 1.3fr;
+      gap: 14px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 14px;
+    }
+    @media (max-width: 820px) { .cart-options { grid-template-columns: 1fr; } }
+    .opt-box-title { font-size: 13px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .radio-stack { display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 600; }
+    .radio-stack label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .summary-final {
+      background: #0F172A;
+      color: #FFF;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sum-line { display: flex; justify-content: space-between; font-size: 13px; color: #CBD5E1; margin-bottom: 4px; }
+    .sum-total-line {
+      border-top: 1px dashed rgba(255,255,255,0.25);
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .sum-total-price { font-size: 24px; font-weight: 900; color: #FDBA74; }
+
+    .alert {
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      border: 1px solid transparent;
+      line-height: 1.45;
+    }
+    .alert-info { background: var(--blue-soft); border-color: #BFDBFE; color: #1E3A8A; }
+    .alert-warn { background: var(--amber-soft); border-color: #FDE68A; color: #78350F; }
+    .alert-danger { background: var(--red-soft); border-color: #FECACA; color: #991B1B; }
+    .alert-success { background: var(--green-soft); border-color: #BBF7D0; color: #14532D; }
+
+    .memo-preview {
+      width: 100%;
+      min-height: 170px;
+      border-radius: 10px;
+      border: 1.5px solid #CBD5E1;
+      padding: 12px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      background: #FEFCE8;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.55;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.58);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #FFF;
+      border-radius: 16px;
+      max-width: 560px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-header h3 { margin: 0; font-size: 18px; }
+    .close-x { border: none; background: #F1F5F9; width: 32px; height: 32px; border-radius: 8px; font-size: 18px; cursor: pointer; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0F172A;
+      color: #FFF;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .hidden { display: none !important; }
+
+    @media print {
+      .topbar, .tabs-wrap, .no-print { display: none !important; }
+      body { background: #FFF; }
+      .card { box-shadow: none; border: 1px solid #CBD5E1; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-badge">주누디자인</span>
+      <div>
+        <h1 class="brand-title">실사출력 시트지 다중 견적 계산기</h1>
+        <span class="brand-sub" id="formula-subtitle">방안 B 확정: ≤1000×1000 규격표 바로 위 선택 / 초과 시 최소 1헤베+비례 · 택배비+부가세 포함</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a href="./index.html" class="btn-top" style="text-decoration:none; background:#1F4E78;">← 전체 견적서</a>
+      <button class="btn-top" onclick="openModal('modal-tutorial')">❓ 사용법</button>
+      <button class="btn-top" onclick="openModal('modal-settings')">⚙️ 세부 설정</button>
+      <button class="btn-top" onclick="shareConfigUrl()">🔗 직원 공유링크 복사</button>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-calc" onclick="switchTab('tab-calc', this)">🧮 다중 견적 계산기</button>
+    <button class="tab-btn" data-tab="tab-std" onclick="switchTab('tab-std', this)">🏪 자사몰 규격별 금액표</button>
+    <button class="tab-btn" data-tab="tab-cheat" onclick="switchTab('tab-cheat', this)">📋 규격외 예시 조견표 (인쇄용)</button>
+  </div>
+</div>
+
+<main class="container">
+  <!-- TAB 1: 다중 견적 계산기 -->
+  <section id="tab-calc">
+    <div class="grid-2 no-print">
+      <!-- 좌측 입력 -->
+      <div>
+        <div class="card">
+          <div class="card-title">
+            <span>1. 시트지 사이즈 및 장수 입력</span>
+            <div class="unit-toggle">
+              <button type="button" id="unit-mm" class="active" onclick="setUnit('mm')">mm 입력</button>
+              <button type="button" id="unit-cm" onclick="setUnit('cm')">cm 입력</button>
+            </div>
+          </div>
+
+          <div class="size-row">
+            <div class="field">
+              <label for="inp-w">가로 (<span class="unit-lbl">mm</span>)</label>
+              <input type="number" id="inp-w" value="500" min="1" step="any" oninput="recalcPreview()" />
+            </div>
+            <div class="times-sign">×</div>
+            <div class="field">
+              <label for="inp-h">세로 (<span class="unit-lbl">mm</span>)</label>
+              <input type="number" id="inp-h" value="700" min="1" step="any" oninput="recalcPreview()" />
+            </div>
+            <div class="field qty-col">
+              <label for="inp-qty">장수</label>
+              <input type="number" id="inp-qty" value="1" min="1" step="1" oninput="recalcPreview()" />
+            </div>
+          </div>
+
+          <div class="preset-chips">
+            <button class="chip" onclick="applyPreset(210,297,1)">A4 (210×297)</button>
+            <button class="chip" onclick="applyPreset(420,297,1)">A3 (420×297)</button>
+            <button class="chip" onclick="applyPreset(500,500,1)">500×500</button>
+            <button class="chip" onclick="applyPreset(500,700,1)">500×700</button>
+            <button class="chip" onclick="applyPreset(600,900,1)">600×900</button>
+            <button class="chip" onclick="applyPreset(1000,500,1)">1000×500</button>
+            <button class="chip" onclick="applyPreset(1000,1000,1)">1000×1000</button>
+            <button class="chip" onclick="applyPreset(1250,590,1)">1250×590</button>
+            <button class="chip" onclick="applyPreset(1500,1000,1)">1500×1000</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>2. 시트지 종류 · 디자인비(건당) 선택</span>
+            <span class="formula-pill">무광코팅 포함</span>
+          </div>
+          <div class="option-grid-2" id="mat-options" style="margin-bottom:12px;">
+            <button type="button" class="opt-card active" data-mat="yupo" onclick="selectMat('yupo')">
+              <span class="opt-name">실내용 합성지 (유포지)</span>
+              <span class="opt-desc">뒷면 흰색 · 실내 일반 (기준가)</span>
+            </button>
+            <button type="button" class="opt-card" data-mat="yupo_gray" onclick="selectMat('yupo_gray')">
+              <span class="opt-name">실내용 그레이합성지</span>
+              <span class="opt-desc">뒷면 회색 · 실내 덧방 (+4,000원)</span>
+            </button>
+            <button type="button" class="opt-card" data-mat="pvc" onclick="selectMat('pvc')">
+              <span class="opt-name">실외용 PVC (켈지)</span>
+              <span class="opt-desc">뒷면 흰색 · 유리창/외부 (+5,000원)</span>
+            </button>
+            <button type="button" class="opt-card" data-mat="pvc_gray" onclick="selectMat('pvc_gray')">
+              <span class="opt-name">실외용 그레이PVC</span>
+              <span class="opt-desc">뒷면 회색 · 외부 덧방 (+9,000원)</span>
+            </button>
+          </div>
+
+          <div class="field" style="margin-bottom:6px;">
+            <label>디자인비 선택 (건당 적용)</label>
+          </div>
+          <div class="option-grid-4" id="design-options">
+            <button type="button" class="opt-card active" data-design="0" onclick="selectDesign(0)">
+              <span class="opt-name">원본/재인쇄</span>
+              <span class="opt-desc">0원</span>
+            </button>
+            <button type="button" class="opt-card" data-design="5000" onclick="selectDesign(5000)">
+              <span class="opt-name">간단 디자인</span>
+              <span class="opt-desc">+5,000원</span>
+            </button>
+            <button type="button" class="opt-card" data-design="10000" onclick="selectDesign(10000)">
+              <span class="opt-name">중급 디자인</span>
+              <span class="opt-desc">+10,000원</span>
+            </button>
+            <button type="button" class="opt-card" data-design="25000" onclick="selectDesign(25000)">
+              <span class="opt-name">고급/메뉴판</span>
+              <span class="opt-desc">+25,000원</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측 단품 미리보기 + 추가 버튼 -->
+      <div>
+        <div id="alert-area"></div>
+
+        <div class="preview-box">
+          <div class="preview-label">선택한 규격 금액 (인쇄+디자인)</div>
+          <div class="preview-price" id="prev-total">30,000원</div>
+          <div class="result-subrow">
+            <span class="badge-dark">적용 규격: <strong id="prev-tier">600×900 이하</strong></span>
+          </div>
+
+          <div class="breakdown">
+            <div class="bd-row">
+              <span>적용 시트지</span>
+              <span id="bd-mat-name">실내용 합성지(유포지)</span>
+            </div>
+            <div class="bd-row">
+              <span>1장 인쇄단가</span>
+              <span id="bd-unit-print">30,000원</span>
+            </div>
+            <div class="bd-row">
+              <span>인쇄비 소계 (<span id="bd-qty-lbl">1장</span>)</span>
+              <strong id="bd-print-sub">30,000원</strong>
+            </div>
+            <div class="bd-row">
+              <span>디자인비 (건당)</span>
+              <span id="bd-design">0원</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-add-cart" onclick="addSheetToCart()">
+            ➕ 이 사이즈 견적 목록에 추가 (계속 담기)
+          </button>
+          <div style="font-size:11px; color:#94A3B8; text-align:center; margin-top:8px;">
+            사이즈·시트지·디자인비를 바꿔 계속 추가하면 아래에서 합산됩니다
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기타 항목 직접 추가 -->
+    <div class="card no-print" style="padding:14px 18px;">
+      <div class="card-title" style="margin-bottom:10px; color:#C2410C;">
+        <span>▶ 기타 항목 / 추가비 직접 추가 (선택)</span>
+        <span style="font-size:12px; font-weight:600; color:var(--text-light);">예: 포맥스 합지, 타공/컷팅, 시공비 등</span>
+      </div>
+      <div class="custom-input-box">
+        <input type="text" id="customName" placeholder="품명 (예: 포맥스 합지)" />
+        <input type="text" id="customDetail" placeholder="상세옵션 (선택)" />
+        <input type="number" id="customQty" placeholder="수량" value="1" min="1" />
+        <input type="number" id="customPrice" placeholder="금액(원)" step="1000" />
+        <button type="button" class="btn-add-custom" onclick="addCustomToCart()">+ 직접 추가</button>
+      </div>
+    </div>
+
+    <!-- 3. 견적 장바구니 & 최종 요약 -->
+    <div class="card cart-card">
+      <div class="card-title">
+        <span>🛒 담긴 견적 내역 (<span id="cart-count-badge">0</span>건)</span>
+        <div class="no-print" style="display:flex; gap:8px;">
+          <button type="button" class="btn-secondary" onclick="window.print()">🖨️ 견적서 인쇄</button>
+          <button type="button" class="btn-secondary" onclick="clearCart()">🗑️ 목록 초기화</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="cartTable">
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>입력 사이즈</th>
+              <th>적용 규격</th>
+              <th>시트지 종류</th>
+              <th>장수</th>
+              <th>인쇄비</th>
+              <th>디자인비(건당)</th>
+              <th>건수(종)</th>
+              <th>행 합계</th>
+              <th class="no-print">삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="10" style="padding:26px; color:#64748B;">
+                아직 담긴 시트지가 없습니다. 위에서 사이즈를 입력한 뒤 <strong>[➕ 이 사이즈 견적 목록에 추가]</strong>를 눌러주세요.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 옵션 및 최종 요약 -->
+      <div class="cart-options">
+        <div>
+          <div class="opt-box-title">▶ 택배비 선택</div>
+          <div class="radio-stack">
+            <label><input type="radio" name="shipping" value="0" onchange="calculateCartTotal()" /> 없음 / 방문·착불 (0원)</label>
+            <label><input type="radio" name="shipping" value="3000" onchange="calculateCartTotal()" checked /> 3,000원</label>
+            <label><input type="radio" name="shipping" value="4000" onchange="calculateCartTotal()" /> 4,000원</label>
+            <label>
+              <input type="radio" name="shipping" value="custom" onchange="calculateCartTotal()" />
+              직접입력: <input type="number" id="customShipping" value="5000" step="1000" style="width:78px; height:28px; border:1px solid #CBD5E1; border-radius:6px; padding:0 6px; font-weight:700;" oninput="calculateCartTotal()" />원
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <div class="opt-box-title">▶ 부가세 (VAT) & 고객명</div>
+          <div class="radio-stack">
+            <label><input type="radio" name="vat" value="exclude" onchange="calculateCartTotal()" checked /> 별도 (미포함)</label>
+            <label><input type="radio" name="vat" value="include" onchange="calculateCartTotal()" /> (품목+택배비)의 10% 포함</label>
+          </div>
+          <div style="margin-top:12px;">
+            <label for="clientNameInput" style="font-size:12px; font-weight:800; color:var(--navy); display:block; margin-bottom:4px;">고객사명 / 성함 (선택)</label>
+            <input type="text" id="clientNameInput" placeholder="예: 블루웨일페인팅 / 홍길동" style="width:100%; height:34px; border:1px solid #CBD5E1; border-radius:8px; padding:0 10px; font-size:13px; font-weight:600;" />
+          </div>
+        </div>
+
+        <div class="summary-final">
+          <div>
+            <div class="sum-line"><span>인쇄비 합계</span><strong id="sumPrint">0원</strong></div>
+            <div class="sum-line"><span>디자인비 합계</span><strong id="sumDesign">0원</strong></div>
+            <div class="sum-line"><span>품목 합계</span><strong id="sumSupply">0원</strong></div>
+            <div class="sum-line"><span>택배비</span><strong id="sumShipping">0원</strong></div>
+            <div class="sum-line"><span>부가세(VAT 10%)</span><strong id="sumVat">0원</strong></div>
+          </div>
+          <div>
+            <div class="sum-total-line">
+              <span style="font-weight:800; font-size:14px;">최종 총금액</span>
+              <span class="sum-total-price" id="grandTotal">0원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 카톡 전송용 생성 / 복사 / 초기화 버튼 -->
+      <div class="no-print" style="margin-top:16px;">
+        <div class="opt-box-title">▶ 최종 견적 카톡 전송용 내역</div>
+        <textarea class="memo-preview" id="resultText" placeholder="아래 [💬 카톡전송용 생성] 버튼을 누르시면 내역과 총금액 안내문이 생성됩니다."></textarea>
+        <div class="action-btn-row">
+          <button type="button" class="btn-kakao" onclick="generateCartMessage(true)">💬 카톡전송용 생성</button>
+          <button type="button" class="btn-primary" onclick="copyCartMessage()">📋 복사하기</button>
+          <button type="button" class="btn-danger-outline" onclick="resetAll()">🗑️ 초기화</button>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin-top:10px;">
+          <button type="button" id="btnQuote" onclick="downloadPDF('quote')" style="border:none; background:#1F4E78; color:#FFF; font-size:14px; font-weight:800; padding:12px 14px; border-radius:10px; cursor:pointer;">📄 견적서 PDF 출력</button>
+          <button type="button" id="btnReceipt" onclick="downloadPDF('receipt')" style="border:none; background:#0F766E; color:#FFF; font-size:14px; font-weight:800; padding:12px 14px; border-radius:10px; cursor:pointer;">🧾 거래명세서 PDF 출력</button>
+          <button type="button" onclick="openDocPreview('quote')" class="btn-secondary" style="font-size:13px; padding:12px 10px;">👁️ 견적서 미리보기/인쇄</button>
+          <button type="button" onclick="openDocPreview('receipt')" class="btn-secondary" style="font-size:13px; padding:12px 10px;">👁️ 명세서 미리보기/인쇄</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: 자사몰 규격별 표준금액표 -->
+  <section id="tab-std" class="hidden">
+    <div class="card">
+      <div class="card-title"><span>🏪 자사몰 표준 규격별 금액표 (기준표)</span></div>
+      <div class="alert alert-info">
+        입력 사이즈(가로×세로, 회전 허용)가 아래 표에 없으면 <strong>바로 위 규격</strong>이 자동 선택되며, <code>1000×1000</code> 초과 대형은 <strong>최소 1헤베(1000×1000) 가격 + 초과 면적(㎡) × 추가단가</strong>(방안 B)로 산정됩니다.
+      </div>
+      <div class="table-wrap">
+        <table id="std-table">
+          <thead>
+            <tr>
+              <th>규격 (mm)</th>
+              <th>수량</th>
+              <th>실내용 합성지(유포지)</th>
+              <th>실내용 그레이합성지</th>
+              <th>실외용 PVC(켈지)</th>
+              <th>실외용 그레이PVC</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: 규격외 예시 조견표 -->
+  <section id="tab-cheat" class="hidden">
+    <div class="card">
+      <div class="card-title">
+        <span>📋 규격외 사이즈 자동 판정 예시 조견표 (1장 기준 · 디자인비/배송비 별도)</span>
+        <button class="btn-secondary no-print" onclick="window.print()">🖨️ 사무실 부착용 인쇄</button>
+      </div>
+      <div class="table-wrap">
+        <table id="cheat-table">
+          <thead>
+            <tr>
+              <th>입력 사이즈 (mm)</th>
+              <th>적용 규격</th>
+              <th>실내용 합성지</th>
+              <th>실내용 그레이</th>
+              <th>실외용 PVC</th>
+              <th>실외용 그레이PVC</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 설정 모달 -->
+<div class="modal-backdrop" id="modal-settings">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚙️ 세부 기준 설정</h3>
+      <button class="close-x" onclick="closeModal('modal-settings')">✕</button>
+    </div>
+    <div class="option-grid-2" style="gap:12px;">
+      <div class="field">
+        <label>1000×1000 초과 ㎡당 추가단가 (원)</label>
+        <input type="number" id="cfg-over-sqm" value="17000" step="1000" />
+      </div>
+      <div class="field">
+        <label>A4/A3 3·6장 세트 할인가 자동적용</label>
+        <select id="cfg-set-discount">
+          <option value="1">적용함 (자사몰 표 기준)</option>
+          <option value="0">적용 안 함 (1장단가×장수)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>최대 출력 롤 폭 (mm)</label>
+        <input type="number" id="cfg-max-roll" value="1350" step="10" />
+      </div>
+      <div class="field">
+        <label>세트 초과 추가 장당 단가 (원)</label>
+        <input type="number" id="cfg-extra-set" value="5000" step="1000" />
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:18px;">
+      <button type="button" class="btn-secondary" style="flex:1;" onclick="resetConfig()">기본값 복원</button>
+      <button type="button" class="btn-primary" style="flex:2;" onclick="saveConfig()">저장 후 적용하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 튜토리얼 모달 -->
+<div class="modal-backdrop" id="modal-tutorial">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>❓ 사용법 안내</h3>
+      <button class="close-x" onclick="closeModal('modal-tutorial')">✕</button>
+    </div>
+    <ol style="font-size:14px; line-height:1.75; padding-left:20px; margin:0;">
+      <li><strong>사이즈·시트지·건당 디자인비 선택 후 [➕ 목록에 추가]:</strong> 규격표 기준으로 바로 위 규격이 자동 선택되어 목록에 담깁니다. (여러 사이즈·재질 계속 추가 가능)</li>
+      <li><strong>1000×1000 초과 대형 (방안 B):</strong> 최소 1헤베(1000×1000) 가격을 보장하고, 1㎡ 초과 면적만 비례 가산합니다.</li>
+      <li><strong>택배비 & 부가세 계산:</strong> 택배비 금액을 포함하여 부가세(10%)와 최종 총금액이 자동 산출됩니다.</li>
+      <li><strong>카톡전송용 생성 / 복사 / 초기화:</strong> 하단 버튼 3개로 안내 멘트를 생성·복사하거나 전체 내용을 바로 비울 수 있습니다.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- 문서 미리보기/인쇄 모달 -->
+<div class="modal-backdrop" id="modal-doc">
+  <div class="modal" style="max-width:860px; width:96%;">
+    <div class="modal-header no-print">
+      <h3 id="modal-doc-title">문서 미리보기</h3>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button type="button" class="btn-primary" style="padding:8px 14px; font-size:13px;" onclick="printPreviewDoc()">🖨️ 바로 인쇄</button>
+        <button class="close-x" onclick="closeModal('modal-doc')">✕</button>
+      </div>
+    </div>
+    <div id="doc-preview-body" style="overflow-x:auto; border:1px solid #E2E8F0; border-radius:8px; background:#FFF;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">완료</div>
+
+<script>
+  const DEFAULT_CFG = {
+    overSqmRate: 17000,
+    useSetDiscount: 1,
+    maxRollMm: 1350,
+    extraSetUnit: 5000
+  };
+
+  const STD_PRICES = {
+    a4_1:   { label: '210×297 (A4 이하)', yupo: 13000, yupo_gray: 17000, pvc: 18000, pvc_gray: 22000 },
+    a4_3:   { label: '210×297 (동일3장)', yupo: 30000, yupo_gray: 34000, pvc: 35000, pvc_gray: 39000 },
+    a3_1:   { label: '420×297 (A3 이하)', yupo: 15000, yupo_gray: 19000, pvc: 20000, pvc_gray: 24000 },
+    a3_3:   { label: '420×297 (동일3장)', yupo: 35000, yupo_gray: 39000, pvc: 40000, pvc_gray: 44000 },
+    a3_6:   { label: '420×297 (동일6장)', yupo: 45000, yupo_gray: 49000, pvc: 50000, pvc_gray: 54000 },
+    s600:   { label: '600×900 이하',      yupo: 30000, yupo_gray: 34000, pvc: 35000, pvc_gray: 39000 },
+    s1000_5:{ label: '1000×500 이하',     yupo: 31000, yupo_gray: 35000, pvc: 36000, pvc_gray: 40000 },
+    s1000:  { label: '1000×1000 이하',    yupo: 32000, yupo_gray: 36000, pvc: 37000, pvc_gray: 41000 }
+  };
+
+  const MAT_LABELS = {
+    yupo: '실내용 합성지(유포지)',
+    yupo_gray: '실내용 그레이합성지',
+    pvc: '실외용 PVC(켈지)',
+    pvc_gray: '실외용 그레이PVC'
+  };
+
+  const MAT_ADD = { yupo: 0, yupo_gray: 4000, pvc: 5000, pvc_gray: 9000 };
+
+  let cfg = loadCfg();
+  let state = { unit: 'mm', mat: 'yupo', design: 0 };
+  let cart = [];
+
+  function loadCfg() {
+    try {
+      if (location.hash.startsWith('#cfg=')) {
+        const parsed = JSON.parse(decodeURIComponent(atob(location.hash.slice(5))));
+        localStorage.setItem('joonoo_sheet_cfg_b', JSON.stringify(parsed));
+        return { ...DEFAULT_CFG, ...parsed };
+      }
+      const saved = localStorage.getItem('joonoo_sheet_cfg_b');
+      return saved ? { ...DEFAULT_CFG, ...JSON.parse(saved) } : { ...DEFAULT_CFG };
+    } catch (e) {
+      return { ...DEFAULT_CFG };
+    }
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
+
+  function calcPlanB(wMm, hMm, qty, matKey) {
+    const minSide = Math.min(wMm, hMm);
+    const maxSide = Math.max(wMm, hMm);
+    let tierKey = 'over';
+    let tierLabel = '1000×1000 초과(대형)';
+
+    if (minSide <= 210 && maxSide <= 297) { tierKey = 'a4_1'; tierLabel = STD_PRICES.a4_1.label; }
+    else if (minSide <= 297 && maxSide <= 420) { tierKey = 'a3_1'; tierLabel = STD_PRICES.a3_1.label; }
+    else if (minSide <= 600 && maxSide <= 900) { tierKey = 's600'; tierLabel = STD_PRICES.s600.label; }
+    else if (minSide <= 500 && maxSide <= 1000) { tierKey = 's1000_5'; tierLabel = STD_PRICES.s1000_5.label; }
+    else if (minSide <= 1000 && maxSide <= 1000) { tierKey = 's1000'; tierLabel = STD_PRICES.s1000.label; }
+
+    let unitPrint = 0;
+    let printSubtotal = 0;
+    let isSetApplied = false;
+
+    if (tierKey !== 'over') {
+      unitPrint = STD_PRICES[tierKey][matKey];
+      if (cfg.useSetDiscount === 1 && tierKey === 'a4_1') {
+        const p3 = STD_PRICES.a4_3[matKey];
+        if (qty <= 1) {
+          printSubtotal = unitPrint;
+        } else if (qty === 2) {
+          printSubtotal = Math.round(((unitPrint + p3) / 2) / 1000) * 1000;
+          tierLabel = '210×297 (2장 계단식)';
+          isSetApplied = true;
+        } else if (qty === 3) {
+          printSubtotal = p3;
+          tierLabel = STD_PRICES.a4_3.label;
+          isSetApplied = true;
+        } else {
+          printSubtotal = p3 + (qty - 3) * cfg.extraSetUnit;
+          tierLabel = `210×297 (3장+추가${qty - 3}장)`;
+          isSetApplied = true;
+        }
+      } else if (cfg.useSetDiscount === 1 && tierKey === 'a3_1') {
+        const p3 = STD_PRICES.a3_3[matKey];
+        const p6 = STD_PRICES.a3_6[matKey];
+        const fullPlates = Math.floor((qty - 1) / 6);
+        const rem = ((qty - 1) % 6) + 1;
+        let remPrice = unitPrint;
+        if (rem === 1) {
+          remPrice = unitPrint;
+        } else if (rem === 2) {
+          remPrice = Math.round(((unitPrint + p3) / 2) / 1000) * 1000;
+        } else if (rem === 3) {
+          remPrice = p3;
+        } else if (rem < 6) {
+          remPrice = Math.round((p3 + ((p6 - p3) / 3) * (rem - 3)) / 1000) * 1000;
+        } else {
+          remPrice = p6;
+        }
+        printSubtotal = fullPlates * p6 + remPrice;
+        if (qty >= 2) {
+          tierLabel = fullPlates > 0 ? `420×297 (${fullPlates}판+${rem}장)` : `420×297 (${qty}장 계단식)`;
+          isSetApplied = true;
+        }
+      } else {
+        printSubtotal = unitPrint * qty;
+      }
+    } else {
+      const area = (wMm / 1000) * (hMm / 1000);
+      const base1Sqm = STD_PRICES.s1000[matKey];
+      const extraArea = Math.max(0, area - 1);
+      const rawUnit = base1Sqm + extraArea * (cfg.overSqmRate + MAT_ADD[matKey]);
+      unitPrint = Math.round(rawUnit / 1000) * 1000;
+      printSubtotal = unitPrint * qty;
+    }
+
+    return { tierKey, tierLabel, unitPrint, printSubtotal, isSetApplied };
+  }
+
+  function getCurrentInputs() {
+    const wRaw = parseFloat(document.getElementById('inp-w').value) || 0;
+    const hRaw = parseFloat(document.getElementById('inp-h').value) || 0;
+    const qty = Math.max(1, parseInt(document.getElementById('inp-qty').value, 10) || 1);
+    const wMm = Math.round(state.unit === 'cm' ? wRaw * 10 : wRaw);
+    const hMm = Math.round(state.unit === 'cm' ? hRaw * 10 : hRaw);
+    return { wMm, hMm, qty };
+  }
+
+  function recalcPreview() {
+    const { wMm, hMm, qty } = getCurrentInputs();
+    const res = calcPlanB(wMm, hMm, qty, state.mat);
+    const total = res.printSubtotal + state.design;
+
+    const alerts = [];
+    if (res.tierKey === 'over') {
+      const area = (wMm / 1000) * (hMm / 1000);
+      alerts.push(
+        `<div class="alert alert-info">📐 <strong>1000×1000 초과 (방안 B 적용):</strong> 면적 ${area.toFixed(2)}㎡ → 최소 1헤베(${fmt(STD_PRICES.s1000[state.mat])}원) 보장 + 1㎡ 초과분만 비례 가산</div>`
+      );
+    }
+    if (Math.min(wMm, hMm) > cfg.maxRollMm) {
+      alerts.push(
+        `<div class="alert alert-danger">⚠️ <strong>최대 출력폭(${fmt(cfg.maxRollMm)}mm) 초과!</strong> 분할 출력(겹침 1~2cm) 안내가 필요합니다.</div>`
+      );
+    }
+    document.getElementById('alert-area').innerHTML = alerts.join('');
+
+    document.getElementById('prev-total').textContent = `${fmt(total)}원`;
+    document.getElementById('prev-tier').textContent = res.tierLabel;
+
+    document.getElementById('bd-mat-name').textContent = MAT_LABELS[state.mat];
+    document.getElementById('bd-unit-print').textContent = res.isSetApplied ? '세트 할인가' : `${fmt(res.unitPrint)}원`;
+    document.getElementById('bd-qty-lbl').textContent = `${fmt(qty)}장`;
+    document.getElementById('bd-print-sub').textContent = `${fmt(res.printSubtotal)}원`;
+    document.getElementById('bd-design').textContent = `${fmt(state.design)}원`;
+  }
+
+  function addSheetToCart() {
+    const { wMm, hMm, qty } = getCurrentInputs();
+    if (wMm <= 0 || hMm <= 0) {
+      showToast('가로와 세로 사이즈를 입력해주세요');
+      return;
+    }
+    const res = calcPlanB(wMm, hMm, qty, state.mat);
+    cart.push({
+      id: Date.now() + Math.random(),
+      type: 'sheet',
+      sizeText: `${wMm}×${hMm}mm`,
+      tierLabel: res.tierLabel,
+      matLabel: MAT_LABELS[state.mat],
+      qty,
+      printSubtotal: res.printSubtotal,
+      design: state.design,
+      count: 1
+    });
+    renderCart();
+    showToast(`목록에 추가되었습니다 (${wMm}×${hMm}mm)`);
+  }
+
+  function addCustomToCart() {
+    const nameEl = document.getElementById('customName');
+    const detailEl = document.getElementById('customDetail');
+    const qtyEl = document.getElementById('customQty');
+    const priceEl = document.getElementById('customPrice');
+
+    const name = nameEl.value.trim();
+    const detail = detailEl.value.trim();
+    const qty = Math.max(1, parseInt(qtyEl.value, 10) || 1);
+    const price = parseInt(priceEl.value, 10) || 0;
+
+    if (!name) {
+      showToast('품명을 입력해주세요');
+      nameEl.focus();
+      return;
+    }
+    cart.push({
+      id: Date.now() + Math.random(),
+      type: 'custom',
+      sizeText: name,
+      tierLabel: '기타/직접입력',
+      matLabel: detail || '-',
+      qty,
+      printSubtotal: price,
+      design: 0,
+      count: 1
+    });
+    nameEl.value = '';
+    detailEl.value = '';
+    qtyEl.value = '1';
+    priceEl.value = '';
+    renderCart();
+    showToast('직접 입력 항목이 추가되었습니다');
+  }
+
+  function updateItemCount(idx, val) {
+    let n = parseInt(val, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    cart[idx].count = n;
+    renderCart();
+  }
+
+  function updateItemDesign(idx, val) {
+    cart[idx].design = parseInt(val, 10) || 0;
+    renderCart();
+  }
+
+  function removeCartItem(idx) {
+    cart.splice(idx, 1);
+    renderCart();
+  }
+
+  function clearCart() {
+    if (cart.length === 0) return;
+    cart = [];
+    renderCart();
+    document.getElementById('resultText').value = '';
+    showToast('목록이 비워졌습니다');
+  }
+
+  function resetAll() {
+    cart = [];
+    document.getElementById('clientNameInput').value = '';
+    document.getElementById('resultText').value = '';
+    document.querySelector('input[name="shipping"][value="3000"]').checked = true;
+    document.querySelector('input[name="vat"][value="exclude"]').checked = true;
+    renderCart();
+    showToast('견적 목록과 카톡 내용이 모두 초기화되었습니다');
+  }
+
+  function renderCart() {
+    const tbody = document.querySelector('#cartTable tbody');
+    document.getElementById('cart-count-badge').textContent = cart.length;
+
+    if (cart.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="padding:26px; color:#64748B;">아직 담긴 시트지가 없습니다. 위에서 사이즈를 입력한 뒤 <strong>[➕ 이 사이즈 견적 목록에 추가]</strong>를 눌러주세요.</td></tr>`;
+      calculateCartTotal();
+      return;
+    }
+
+    tbody.innerHTML = cart.map((item, idx) => {
+      const rowTotal = (item.printSubtotal + item.design) * item.count;
+      const desOpts = [0, 5000, 10000, 25000].map(v =>
+        `<option value="${v}" ${item.design === v ? 'selected' : ''}>${v === 0 ? '0원(원본)' : fmt(v) + '원'}</option>`
+      ).join('');
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="td-left">${item.sizeText}</td>
+          <td>${item.tierLabel}</td>
+          <td>${item.matLabel}</td>
+          <td>${fmt(item.qty)}장</td>
+          <td>${fmt(item.printSubtotal)}원</td>
+          <td>
+            <select onchange="updateItemDesign(${idx}, this.value)" style="height:30px; border:1px solid #CBD5E1; border-radius:6px; font-weight:700; font-size:12px;">
+              ${desOpts}
+            </select>
+          </td>
+          <td>
+            <input type="number" class="count-input" min="1" value="${item.count}" onchange="updateItemCount(${idx}, this.value)" />
+          </td>
+          <td class="td-highlight">${fmt(rowTotal)}원</td>
+          <td class="no-print"><button type="button" class="del-btn" onclick="removeCartItem(${idx})">삭제</button></td>
+        </tr>
+      `;
+    }).join('');
+
+    calculateCartTotal();
+  }
+
+  function getTotals() {
+    const sumPrint = cart.reduce((acc, i) => acc + i.printSubtotal * i.count, 0);
+    const sumDesign = cart.reduce((acc, i) => acc + i.design * i.count, 0);
+    const sumSupply = sumPrint + sumDesign;
+
+    const shipRadio = document.querySelector('input[name="shipping"]:checked').value;
+    const shippingFee = cart.length === 0 ? 0 : (
+      shipRadio === 'custom'
+        ? (parseInt(document.getElementById('customShipping').value, 10) || 0)
+        : parseInt(shipRadio, 10)
+    );
+    const isVatInclude = document.querySelector('input[name="vat"]:checked').value === 'include';
+    const vatFee = isVatInclude ? Math.floor((sumSupply + shippingFee) * 0.1) : 0;
+    const grandTotal = sumSupply + shippingFee + vatFee;
+
+    return { sumPrint, sumDesign, sumSupply, vatFee, isVatInclude, shippingFee, grandTotal };
+  }
+
+  function calculateCartTotal() {
+    const t = getTotals();
+    document.getElementById('sumPrint').textContent = `${fmt(t.sumPrint)}원`;
+    document.getElementById('sumDesign').textContent = `${fmt(t.sumDesign)}원`;
+    document.getElementById('sumSupply').textContent = `${fmt(t.sumSupply)}원`;
+    document.getElementById('sumVat').textContent = `${fmt(t.vatFee)}원`;
+    document.getElementById('sumShipping').textContent = `${fmt(t.shippingFee)}원`;
+    document.getElementById('grandTotal').textContent = `${fmt(t.grandTotal)}원`;
+  }
+
+  function generateCartMessage(fromBtn) {
+    if (cart.length === 0) {
+      if (fromBtn) showToast('장바구니에 항목을 먼저 담아주세요');
+      document.getElementById('resultText').value = '';
+      return;
+    }
+    const t = getTotals();
+    const client = document.getElementById('clientNameInput').value.trim();
+    let text = `[주누디자인 실사출력 시트지 견적 안내]${client ? ` (${client} 고객님)` : ''}\n\n`;
+
+    cart.forEach((item, idx) => {
+      const rowTotal = (item.printSubtotal + item.design) * item.count;
+      text += `${idx + 1}. ${item.sizeText} / ${item.matLabel} / ${fmt(item.qty)}장`;
+      if (item.count > 1) text += ` × ${item.count}건`;
+      text += `\n   - 인쇄 ${fmt(item.printSubtotal)}원`;
+      if (item.design > 0) text += ` + 디자인 ${fmt(item.design)}원`;
+      text += ` → 소계 ${fmt(rowTotal)}원\n`;
+    });
+
+    text += `\n-------------------------\n`;
+    text += `▶ 품목 합계(인쇄+디자인): ${fmt(t.sumSupply)}원\n`;
+    if (t.shippingFee > 0) text += `▶ 택배비: ${fmt(t.shippingFee)}원\n`;
+    if (t.isVatInclude) text += `▶ 부가세(10%): ${fmt(t.vatFee)}원\n`;
+    text += `=========================\n`;
+    text += `▶ 최종 총금액: ${fmt(t.grandTotal)}원`;
+
+    document.getElementById('resultText').value = text;
+    if (fromBtn) showToast('카톡 전송용 안내문이 생성되었습니다');
+  }
+
+  function copyCartMessage() {
+    let val = document.getElementById('resultText').value;
+    if (!val && cart.length > 0) {
+      generateCartMessage(false);
+      val = document.getElementById('resultText').value;
+    }
+    if (!val) {
+      showToast('복사할 견적 내용이 없습니다');
+      return;
+    }
+    copyText(val, '카톡 전송용 견적 안내가 복사되었습니다');
+  }
+
+  function renderTables() {
+    const stdRows = [
+      ['210×297 이하 (A4)', '1', STD_PRICES.a4_1, 'A4 이하 공통'],
+      ['210×297 (동일디자인)', '3', STD_PRICES.a4_3, '3장 세트 특가'],
+      ['420×297 (A3)', '1', STD_PRICES.a3_1, 'A4 초과 ~ A3 이하'],
+      ['420×297 (동일디자인)', '3', STD_PRICES.a3_3, '3장 세트 특가'],
+      ['420×297 (동일디자인)', '6', STD_PRICES.a3_6, '6장 세트 특가'],
+      ['600×900', '1', STD_PRICES.s600, 'A3 초과 ~ 600×900 이하'],
+      ['1000×500 이하', '1', STD_PRICES.s1000_5, '긴변 ≤1000, 짧은변 ≤500'],
+      ['1000×1000', '1', STD_PRICES.s1000, '그 외 1000×1000 이하'],
+    ];
+    document.querySelector('#std-table tbody').innerHTML = stdRows.map(([sz, q, p, note]) => `
+      <tr>
+        <td class="td-left">${sz}</td>
+        <td>${q}장</td>
+        <td class="td-highlight">${fmt(p.yupo)}원</td>
+        <td>${fmt(p.yupo_gray)}원</td>
+        <td>${fmt(p.pvc)}원</td>
+        <td>${fmt(p.pvc_gray)}원</td>
+        <td>${note}</td>
+      </tr>
+    `).join('');
+
+    const examples = [
+      [200, 280], [300, 400], [500, 500], [500, 700], [450, 950],
+      [700, 800], [1000, 1000], [1250, 590], [1100, 1100], [1500, 1000], [2000, 1000]
+    ];
+    document.querySelector('#cheat-table tbody').innerHTML = examples.map(([w, h]) => {
+      const r1 = calcPlanB(w, h, 1, 'yupo');
+      const r2 = calcPlanB(w, h, 1, 'yupo_gray');
+      const r3 = calcPlanB(w, h, 1, 'pvc');
+      const r4 = calcPlanB(w, h, 1, 'pvc_gray');
+      return `<tr>
+        <td class="td-left">${w} × ${h}</td>
+        <td>${r1.tierLabel}</td>
+        <td class="td-highlight">${fmt(r1.unitPrint)}원</td>
+        <td>${fmt(r2.unitPrint)}원</td>
+        <td>${fmt(r3.unitPrint)}원</td>
+        <td>${fmt(r4.unitPrint)}원</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function syncSettingsUI() {
+    document.getElementById('cfg-over-sqm').value = cfg.overSqmRate;
+    document.getElementById('cfg-set-discount').value = String(cfg.useSetDiscount);
+    document.getElementById('cfg-max-roll').value = cfg.maxRollMm;
+    document.getElementById('cfg-extra-set').value = cfg.extraSetUnit;
+  }
+
+  function setUnit(u) {
+    if (state.unit === u) return;
+    const wEl = document.getElementById('inp-w');
+    const hEl = document.getElementById('inp-h');
+    const wVal = parseFloat(wEl.value) || 0;
+    const hVal = parseFloat(hEl.value) || 0;
+    if (u === 'cm') {
+      wEl.value = +(wVal / 10).toFixed(1);
+      hEl.value = +(hVal / 10).toFixed(1);
+    } else {
+      wEl.value = Math.round(wVal * 10);
+      hEl.value = Math.round(hVal * 10);
+    }
+    state.unit = u;
+    document.getElementById('unit-mm').classList.toggle('active', u === 'mm');
+    document.getElementById('unit-cm').classList.toggle('active', u === 'cm');
+    document.querySelectorAll('.unit-lbl').forEach(el => el.textContent = u);
+    recalcPreview();
+  }
+
+  function applyPreset(wMm, hMm, qty) {
+    document.getElementById('inp-w').value = state.unit === 'cm' ? +(wMm / 10).toFixed(1) : wMm;
+    document.getElementById('inp-h').value = state.unit === 'cm' ? +(hMm / 10).toFixed(1) : hMm;
+    document.getElementById('inp-qty').value = qty;
+    recalcPreview();
+  }
+
+  function selectMat(mat) {
+    state.mat = mat;
+    document.querySelectorAll('#mat-options .opt-card').forEach(b => b.classList.toggle('active', b.dataset.mat === mat));
+    recalcPreview();
+  }
+
+  function selectDesign(val) {
+    state.design = val;
+    document.querySelectorAll('#design-options .opt-card').forEach(b => b.classList.toggle('active', parseInt(b.dataset.design, 10) === val));
+    recalcPreview();
+  }
+
+  function switchTab(tabId, btn) {
+    ['tab-calc', 'tab-std', 'tab-cheat'].forEach(id => document.getElementById(id).classList.toggle('hidden', id !== tabId));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function saveConfig() {
+    cfg = {
+      overSqmRate: parseInt(document.getElementById('cfg-over-sqm').value, 10) || 17000,
+      useSetDiscount: parseInt(document.getElementById('cfg-set-discount').value, 10),
+      maxRollMm: parseInt(document.getElementById('cfg-max-roll').value, 10) || 1350,
+      extraSetUnit: parseInt(document.getElementById('cfg-extra-set').value, 10) || 5000
+    };
+    localStorage.setItem('joonoo_sheet_cfg_b', JSON.stringify(cfg));
+    syncSettingsUI();
+    renderTables();
+    recalcPreview();
+    closeModal('modal-settings');
+    showToast('설정이 저장되었습니다');
+  }
+
+  function resetConfig() {
+    cfg = { ...DEFAULT_CFG };
+    localStorage.removeItem('joonoo_sheet_cfg_b');
+    if (location.hash.startsWith('#cfg=')) history.replaceState(null, '', location.pathname);
+    syncSettingsUI();
+    renderTables();
+    recalcPreview();
+    showToast('기본값으로 복원되었습니다');
+  }
+
+  function shareConfigUrl() {
+    const encoded = btoa(encodeURIComponent(JSON.stringify(cfg)));
+    const url = location.origin + location.pathname + '#cfg=' + encoded;
+    copyText(url, '직원 공유용 설정 링크가 복사되었습니다');
+  }
+
+  function copyText(txt, toastMsg) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(txt).then(() => showToast(toastMsg));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast(toastMsg);
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  const STAMP_URI = "data:image/jpeg;base64,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";
+
+  function buildDocHtml(docType) {
+    const isQuote = (docType === 'quote');
+    const docTitle = isQuote ? '견 적 서' : '거 래 명 세 서';
+    const dateLabel = isQuote ? '견적일자:' : '공급일자:';
+    let clientName = document.getElementById('clientNameInput').value.trim();
+    if (!clientName) clientName = '고객님';
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}년 ${String(today.getMonth() + 1).padStart(2, '0')}월 ${String(today.getDate()).padStart(2, '0')}일`;
+    const t = getTotals();
+    const vatText = t.isVatInclude ? '(VAT 포함)' : '(VAT 별도)';
+
+    let tbodyHtml = '';
+    let currentNo = 1;
+    cart.forEach((item) => {
+      const unitSet = item.printSubtotal + item.design;
+      const supply = unitSet * item.count;
+      const specDetail = `${item.matLabel}${item.design > 0 ? ' / 디자인 ' + fmt(item.design) + '원' : ''} (${fmt(item.qty)}장)`;
+      let fullName = `${item.sizeText} - ${specDetail}`;
+      if (item.count > 1) fullName += ` (×${item.count}건)`;
+      tbodyHtml += `
+        <tr>
+          <td style="border:1px solid #000; border-right:none; padding:6px 8px; text-align:center; color:#000; font-size:13px;">${currentNo++}</td>
+          <td style="border:1px solid #000; border-left:none; padding:6px 8px; text-align:left; color:#000; font-size:13px; font-weight:500;">${fullName}</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:center; color:#000; font-size:13px;">${fmt(item.qty * item.count)}</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:right; color:#000; font-size:13px;">${fmt(unitSet)}</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:right; color:#000; font-size:13px;">${fmt(supply)}</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:center; color:#000; font-size:13px;">-</td>
+        </tr>`;
+    });
+
+    if (t.shippingFee > 0) {
+      tbodyHtml += `
+        <tr>
+          <td style="border:1px solid #000; border-right:none; padding:6px 8px; text-align:center; color:#000; font-size:13px;">${currentNo++}</td>
+          <td style="border:1px solid #000; border-left:none; padding:6px 8px; text-align:left; color:#000; font-size:13px; font-weight:500;">택배비/운임</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:center; color:#000; font-size:13px;">1</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:right; color:#000; font-size:13px;">${fmt(t.shippingFee)}</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:right; color:#000; font-size:13px;">${fmt(t.shippingFee)}</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:center; color:#000; font-size:13px;">-</td>
+        </tr>`;
+    }
+
+    const MAX_ROWS = 11;
+    for (let i = currentNo; i <= MAX_ROWS; i++) {
+      tbodyHtml += `
+        <tr>
+          <td style="border:1px solid #000; border-right:none; padding:6px 8px; text-align:center; color:#000; font-size:13px;">${i}</td>
+          <td style="border:1px solid #000; border-left:none; padding:6px 8px;">&nbsp;</td>
+          <td style="border:1px solid #000; padding:6px 8px;">&nbsp;</td>
+          <td style="border:1px solid #000; padding:6px 8px;">&nbsp;</td>
+          <td style="border:1px solid #000; padding:6px 8px;">&nbsp;</td>
+          <td style="border:1px solid #000; padding:6px 8px; text-align:center;">-</td>
+        </tr>`;
+    }
+
+    tbodyHtml += `
+      <tr style="background-color:#fcfcfc;">
+        <td colspan="2" style="border:1px solid #000; padding:10px; text-align:center; color:#000; font-weight:bold; font-size:14px;">합 계</td>
+        <td style="border:1px solid #000; padding:10px;"></td>
+        <td style="border:1px solid #000; padding:10px;"></td>
+        <td style="border:1px solid #000; padding:10px; text-align:right; color:#000; font-weight:bold; font-size:14px;">${fmt(t.sumSupply + t.shippingFee)}</td>
+        <td style="border:1px solid #000; padding:10px; text-align:right; color:#000; font-weight:bold; font-size:14px;">${t.isVatInclude ? fmt(t.vatFee) : '-'}</td>
+      </tr>`;
+
+    const bottomNoteHtml = isQuote
+      ? `<div style="margin-top:20px; font-size:14px; color:#333; line-height:1.8;">
+           <strong>[비고]</strong><br>
+           - 본 견적서의 유효기간은 발행일로부터 15일입니다.<br>
+           ${!t.isVatInclude ? '- 위 금액은 부가세 별도 금액입니다.<br>' : ''}
+         </div>`
+      : `<div style="margin-top:20px; display:flex; justify-content:space-between; align-items:flex-end; color:#333;">
+           <div style="font-size:14px; line-height:1.8;">
+             <strong>[비고]</strong><br>
+             ${!t.isVatInclude ? '- 위 금액은 부가세 별도 금액입니다.<br>' : ''}
+           </div>
+           <div style="font-size:16px; font-weight:bold;">
+             인수자 성명 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명 또는 인)
+           </div>
+         </div>`;
+
+    return `
+      <div style="width:794px; min-height:1122px; padding:40px; background:#fff; color:#000; font-family:'Malgun Gothic','맑은 고딕',sans-serif; box-sizing:border-box; position:relative; margin:0 auto;">
+        <h1 style="text-align:center; font-size:38px; margin:0 0 30px; letter-spacing:20px; border-bottom:2px solid #000; padding-bottom:15px; border-top:2px solid #000; padding-top:15px; color:#000;">${docTitle}</h1>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:flex-end; color:#000; width:100%;">
+          <div style="width:45%;">
+            <div style="font-size:20px; padding-bottom:5px; margin-bottom:10px;">
+              <strong style="font-size:24px; border-bottom:1px solid #000; padding-right:20px;">${clientName}</strong> 귀하
+            </div>
+            <div style="font-size:14px; margin-bottom:5px;">${dateLabel} ${todayStr}</div>
+          </div>
+          <div style="width:50%; border:2px solid #000; padding:15px; border-radius:5px; font-size:13px; line-height:1.8;">
+            <div style="display:flex;"><div style="width:75px; font-weight:bold;">상&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;호 :</div><div>주누디자인</div></div>
+            <div style="display:flex;">
+              <div style="width:75px; font-weight:bold;">대&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;표 :</div>
+              <div style="position:relative; font-weight:bold;">전현수
+                <img src="${STAMP_URI}" style="position:absolute; top:-10px; left:55px; width:45px; height:45px; opacity:0.85; mix-blend-mode:multiply;" />
+              </div>
+            </div>
+            <div style="display:flex;"><div style="width:75px; font-weight:bold;">주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 :</div><div>대구광역시 달서구 구마로39길 38</div></div>
+            <div style="display:flex;"><div style="width:75px; font-weight:bold;">전화번호 :</div><div>053-267-3973</div></div>
+          </div>
+        </div>
+        <div style="border-bottom:2px solid #333; margin-bottom:15px;"></div>
+        <div style="font-size:16px; margin-bottom:5px;">아래와 같이 ${isQuote ? '견적' : '명세'}합니다.</div>
+        <div style="display:flex; align-items:center; background:#eef5fb; border:2px solid #2c3e50; padding:15px; margin-bottom:15px; font-size:20px; color:#2c3e50;">
+          <span style="font-weight:bold; width:120px;">합계금액 :</span>
+          <strong style="font-size:26px; margin-left:10px; margin-right:15px;">${fmt(t.grandTotal)}</strong> 원 <span style="font-size:16px; margin-left:5px; color:#555;">${vatText}</span>
+        </div>
+        <table style="width:100%; border-collapse:collapse; border:2px solid #000; margin-top:15px;">
+          <thead>
+            <tr>
+              <th style="width:6%; color:#000; border:1px solid #000; padding:10px; background:#e2e8f0; font-weight:bold; border-right:none;">No</th>
+              <th style="width:45%; color:#000; border:1px solid #000; padding:10px; background:#e2e8f0; font-weight:bold; border-left:none;">품명 및 규격</th>
+              <th style="width:12%; color:#000; border:1px solid #000; padding:10px; background:#e2e8f0; font-weight:bold;">수량</th>
+              <th style="width:13%; color:#000; border:1px solid #000; padding:10px; background:#e2e8f0; font-weight:bold;">단가</th>
+              <th style="width:14%; color:#000; border:1px solid #000; padding:10px; background:#e2e8f0; font-weight:bold;">공급가액</th>
+              <th style="width:10%; color:#000; border:1px solid #000; padding:10px; background:#e2e8f0; font-weight:bold;">세액</th>
+            </tr>
+          </thead>
+          <tbody>${tbodyHtml}</tbody>
+        </table>
+        ${bottomNoteHtml}
+      </div>`;
+  }
+
+  function openDocPreview(docType) {
+    if (cart.length === 0) {
+      showToast('장바구니가 비어 있습니다. 품목을 먼저 담아주세요');
+      return;
+    }
+    document.getElementById('modal-doc-title').textContent = docType === 'quote' ? '📄 견적서 미리보기' : '🧾 거래명세서 미리보기';
+    document.getElementById('doc-preview-body').innerHTML = buildDocHtml(docType);
+    openModal('modal-doc');
+  }
+
+  function printPreviewDoc() {
+    const content = document.getElementById('doc-preview-body').innerHTML;
+    const win = window.open('', '_blank', 'width=860,height=1000');
+    if (!win) {
+      showToast('팝업 차단을 해제한 뒤 다시 눌러주세요');
+      return;
+    }
+    win.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>인쇄</title><style>@page{size:A4 portrait;margin:0;}body{margin:0;}</style></head><body>' + content + '<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>');
+    win.document.close();
+  }
+
+  function downloadPDF(docType) {
+    if (cart.length === 0) {
+      showToast('장바구니가 비어 있습니다. 품목을 먼저 담아주세요');
+      return;
+    }
+    if (typeof html2pdf === 'undefined') {
+      openDocPreview(docType);
+      showToast('오프라인 상태입니다. [바로 인쇄]에서 PDF로 저장해 주세요');
+      return;
+    }
+    const isQuote = (docType === 'quote');
+    const fileSuffix = isQuote ? '견적서' : '거래명세서';
+    let clientName = document.getElementById('clientNameInput').value.trim();
+    if (!clientName) clientName = '고객님';
+
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '0px';
+    wrapper.style.top = '0px';
+    wrapper.style.zIndex = '-9999';
+    wrapper.style.backgroundColor = 'white';
+    wrapper.innerHTML = buildDocHtml(docType);
+    document.body.appendChild(wrapper);
+
+    const btn = document.getElementById(isQuote ? 'btnQuote' : 'btnReceipt');
+    const orig = btn.textContent;
+    btn.textContent = `⏳ ${fileSuffix} 생성 중...`;
+    btn.disabled = true;
+
+    setTimeout(() => {
+      const opt = {
+        margin: 0,
+        filename: `${clientName}_주누디자인_${fileSuffix}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(wrapper.firstElementChild).save().then(() => {
+        document.body.removeChild(wrapper);
+        btn.textContent = orig;
+        btn.disabled = false;
+        showToast(`${fileSuffix} PDF가 저장되었습니다`);
+      }).catch(() => {
+        if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+        btn.textContent = orig;
+        btn.disabled = false;
+        openDocPreview(docType);
+        showToast('PDF 자동 저장 실패 — [바로 인쇄]에서 PDF 저장해 주세요');
+      });
+    }, 400);
+  }
+
+
+
+  syncSettingsUI();
+  renderTables();
+  recalcPreview();
+  renderCart();
+</script>
+</body>
+</html>
