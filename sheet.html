@@ -868,8 +868,8 @@
     </div>
     <div class="option-grid-2" style="gap:12px;">
       <div class="field">
-        <label>1000×1000 초과 ㎡당 추가단가 (원)</label>
-        <input type="number" id="cfg-over-sqm" value="17000" step="1000" />
+        <label>1000×1000 초과 ㎡당 단가 (원, 기본 32,000)</label>
+        <input type="number" id="cfg-over-sqm" value="32000" step="1000" />
       </div>
       <div class="field">
         <label>A4/A3 3·6장 세트 할인가 자동적용</label>
@@ -928,7 +928,7 @@
 
 <script>
   const DEFAULT_CFG = {
-    overSqmRate: 17000,
+    overSqmRate: 32000,
     useSetDiscount: 1,
     maxRollMm: 1350,
     extraSetUnit: 5000
@@ -962,10 +962,10 @@
     try {
       if (location.hash.startsWith('#cfg=')) {
         const parsed = JSON.parse(decodeURIComponent(atob(location.hash.slice(5))));
-        localStorage.setItem('joonoo_sheet_cfg_b', JSON.stringify(parsed));
+        localStorage.setItem('joonoo_sheet_cfg_v2', JSON.stringify(parsed));
         return { ...DEFAULT_CFG, ...parsed };
       }
-      const saved = localStorage.getItem('joonoo_sheet_cfg_b');
+      const saved = localStorage.getItem('joonoo_sheet_cfg_v2');
       return saved ? { ...DEFAULT_CFG, ...JSON.parse(saved) } : { ...DEFAULT_CFG };
     } catch (e) {
       return { ...DEFAULT_CFG };
@@ -1312,7 +1312,7 @@
 
     const examples = [
       [200, 280], [300, 400], [500, 500], [500, 700], [450, 950],
-      [700, 800], [1000, 1000], [1250, 590], [1100, 1100], [1500, 1000], [2000, 1000]
+      [700, 800], [1000, 1000], [1250, 590], [1100, 1100], [1500, 1000], [2000, 1000], [2000, 2000]
     ];
     document.querySelector('#cheat-table tbody').innerHTML = examples.map(([w, h]) => {
       const r1 = calcPlanB(w, h, 1, 'yupo');
@@ -1387,12 +1387,12 @@
 
   function saveConfig() {
     cfg = {
-      overSqmRate: parseInt(document.getElementById('cfg-over-sqm').value, 10) || 17000,
+      overSqmRate: parseInt(document.getElementById('cfg-over-sqm').value, 10) || 32000,
       useSetDiscount: parseInt(document.getElementById('cfg-set-discount').value, 10),
       maxRollMm: parseInt(document.getElementById('cfg-max-roll').value, 10) || 1350,
       extraSetUnit: parseInt(document.getElementById('cfg-extra-set').value, 10) || 5000
     };
-    localStorage.setItem('joonoo_sheet_cfg_b', JSON.stringify(cfg));
+    localStorage.setItem('joonoo_sheet_cfg_v2', JSON.stringify(cfg));
     syncSettingsUI();
     renderTables();
     recalcPreview();
@@ -1402,7 +1402,7 @@
 
   function resetConfig() {
     cfg = { ...DEFAULT_CFG };
-    localStorage.removeItem('joonoo_sheet_cfg_b');
+    localStorage.removeItem('joonoo_sheet_cfg_v2');
     if (location.hash.startsWith('#cfg=')) history.replaceState(null, '', location.pathname);
     syncSettingsUI();
     renderTables();
