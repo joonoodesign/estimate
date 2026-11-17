@@ -541,7 +541,7 @@
       <span class="brand-badge">주누디자인</span>
       <div>
         <h1 class="brand-title">실사출력 시트지 다중 견적 계산기</h1>
-        <span class="brand-sub" id="formula-subtitle">≤1000×1000 표준규격 / 1헤베 초과: 긴변=가로·짧은변=세로 자동정렬 (최소폭 1,500mm 이하)</span>
+        <span class="brand-sub" id="formula-subtitle">≤1000×1000 표준규격 / 1헤베 초과: 1m단위 올림(1001~2000=2배, 2001~3000=3배) × max(1,짧은변m)</span>
       </div>
     </div>
     <div class="topbar-actions">
@@ -903,7 +903,7 @@
     </div>
     <ol style="font-size:14px; line-height:1.75; padding-left:20px; margin:0;">
       <li><strong>사이즈·시트지·건당 디자인비 선택 후 [➕ 목록에 추가]:</strong> 규격표 기준으로 바로 위 규격이 자동 선택되어 목록에 담깁니다. (여러 사이즈·재질 계속 추가 가능)</li>
-      <li><strong>1헤베(1000×1000) 초과 견적상품:</strong> 입력 순서와 무관하게 <strong>긴 변=가로, 짧은 변=세로</strong>로 자동 정렬하여 <code>헤베단가 × (1 + 긴변m) × max(1, 짧은변m)</code> 을 적용합니다. (최소 한 변은 1,500mm 이하만 제작 가능)</li>
+      <li><strong>1헤베(1000×1000) 초과 견적상품:</strong> 입력 순서와 무관하게 <strong>긴 변=가로, 짧은 변=세로</strong>로 자동 정렬하여 <code>헤베단가 × 올림(긴변m) × max(1, 짧은변m)</code> 을 적용합니다. (<code>1001~2000×1000</code>은 2헤베 64,000원, <code>2001~3000×1000</code>은 3헤베 96,000원 / 최소 한 변 1,500mm 이하만 제작 가능)</li>
       <li><strong>택배비 & 부가세 계산:</strong> 택배비 금액을 포함하여 부가세(10%)와 최종 총금액이 자동 산출됩니다.</li>
       <li><strong>카톡전송용 생성 / 복사 / 초기화:</strong> 하단 버튼 3개로 안내 멘트를 생성·복사하거나 전체 내용을 바로 비울 수 있습니다.</li>
     </ol>
@@ -1038,14 +1038,14 @@
         printSubtotal = unitPrint * qty;
       }
     } else {
-      const wFactor = 1 + (longSide / 1000);
+      const wFactor = Math.ceil(longSide / 1000);
       const hFactor = Math.max(1, shortSide / 1000);
       const totalFactor = wFactor * hFactor;
       const base1Sqm = cfg.overSqmRate + MAT_ADD[matKey];
       const rawUnit = base1Sqm * totalFactor;
       unitPrint = Math.round(rawUnit / 1000) * 1000;
       printSubtotal = unitPrint * qty;
-      tierLabel = `견적상품 (${totalFactor.toFixed(2)}배)`;
+      tierLabel = `견적상품 (${totalFactor.toFixed(2).replace(/\.00$/,'')}배)`;
     }
 
     return { tierKey, tierLabel, unitPrint, printSubtotal, isSetApplied, longSide, shortSide };
@@ -1071,13 +1071,13 @@
         `<div class="alert alert-danger">⛔ <strong>제작 불가:</strong> 가로·세로 중 최소 한 변(폭)은 ${fmt(cfg.maxRollMm)}mm 이하이어야 합니다. (현재 짧은 변 ${fmt(res.shortSide)}mm)</div>`
       );
     } else if (res.tierKey === 'over') {
-      const wFactor = 1 + (res.longSide / 1000);
+      const wFactor = Math.ceil(res.longSide / 1000);
       const hFactor = Math.max(1, res.shortSide / 1000);
       const totalFactor = wFactor * hFactor;
       const base1Sqm = cfg.overSqmRate + MAT_ADD[state.mat];
       const swappedNote = wMm < hMm ? ` · 🔄 자동정렬(${fmt(res.longSide)}×${fmt(res.shortSide)})` : '';
       alerts.push(
-        `<div class="alert alert-info">📐 <strong>견적상품 (1헤베 초과${swappedNote}):</strong> 헤베단가(${fmt(base1Sqm)}원) × 긴변배수(${wFactor.toFixed(2)}) × 짧은변배수(${hFactor.toFixed(2)}) = <strong>${totalFactor.toFixed(2)}배</strong></div>`
+        `<div class="alert alert-info">📐 <strong>견적상품 (1헤베 초과${swappedNote}):</strong> 헤베단가(${fmt(base1Sqm)}원) × 긴변올림(${wFactor}헤베) × 짧은변배수(${hFactor.toFixed(2)}) = <strong>${totalFactor.toFixed(2).replace(/\.00$/,'')}배</strong></div>`
       );
     }
     document.getElementById('alert-area').innerHTML = alerts.join('');
