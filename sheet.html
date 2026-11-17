@@ -541,7 +541,7 @@
       <span class="brand-badge">주누디자인</span>
       <div>
         <h1 class="brand-title">실사출력 시트지 다중 견적 계산기</h1>
-        <span class="brand-sub" id="formula-subtitle">≤1000×1000 표준규격 / 1헤베 초과 견적상품: 헤베단가×(1+가로m)×max(1,세로m) (세로 최대 1,500mm)</span>
+        <span class="brand-sub" id="formula-subtitle">≤1000×1000 표준규격 / 1헤베 초과: 긴변=가로·짧은변=세로 자동정렬 (최소폭 1,500mm 이하)</span>
       </div>
     </div>
     <div class="topbar-actions">
@@ -578,13 +578,13 @@
 
           <div class="size-row">
             <div class="field">
-              <label for="inp-w">가로 길이 (<span class="unit-lbl">mm</span>)</label>
+              <label for="inp-w">가로 (<span class="unit-lbl">mm</span>)</label>
               <input type="number" id="inp-w" value="500" min="1" step="any" oninput="recalcPreview()" />
             </div>
             <div class="times-sign">×</div>
             <div class="field">
-              <label for="inp-h">세로 폭 (<span class="unit-lbl">mm</span>, 최대 1500)</label>
-              <input type="number" id="inp-h" value="700" min="1" max="1500" step="any" oninput="enforceMaxHeightAndRecalc()" />
+              <label for="inp-h">세로 (<span class="unit-lbl">mm</span> · 긴변 자동정렬)</label>
+              <input type="number" id="inp-h" value="700" min="1" step="any" oninput="recalcPreview()" />
             </div>
             <div class="field qty-col">
               <label for="inp-qty">장수</label>
@@ -903,7 +903,7 @@
     </div>
     <ol style="font-size:14px; line-height:1.75; padding-left:20px; margin:0;">
       <li><strong>사이즈·시트지·건당 디자인비 선택 후 [➕ 목록에 추가]:</strong> 규격표 기준으로 바로 위 규격이 자동 선택되어 목록에 담깁니다. (여러 사이즈·재질 계속 추가 가능)</li>
-      <li><strong>1헤베(1000×1000) 초과 견적상품:</strong> 2헤베로 시작하며 <code>헤베단가 × (1 + 가로m) × max(1, 세로m)</code> 공식이 적용됩니다. (세로는 최대 1,500mm까지 제작 가능하여 그 이상은 입력 제한)</li>
+      <li><strong>1헤베(1000×1000) 초과 견적상품:</strong> 입력 순서와 무관하게 <strong>긴 변=가로, 짧은 변=세로</strong>로 자동 정렬하여 <code>헤베단가 × (1 + 긴변m) × max(1, 짧은변m)</code> 을 적용합니다. (최소 한 변은 1,500mm 이하만 제작 가능)</li>
       <li><strong>택배비 & 부가세 계산:</strong> 택배비 금액을 포함하여 부가세(10%)와 최종 총금액이 자동 산출됩니다.</li>
       <li><strong>카톡전송용 생성 / 복사 / 초기화:</strong> 하단 버튼 3개로 안내 멘트를 생성·복사하거나 전체 내용을 바로 비울 수 있습니다.</li>
     </ol>
@@ -974,29 +974,18 @@
 
   function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
 
-  function enforceMaxHeightAndRecalc() {
-    const hEl = document.getElementById('inp-h');
-    const maxVal = state.unit === 'cm' ? (cfg.maxRollMm / 10) : cfg.maxRollMm;
-    const raw = parseFloat(hEl.value);
-    if (!isNaN(raw) && raw > maxVal) {
-      hEl.value = maxVal;
-      showToast(`세로는 최대 ${fmt(cfg.maxRollMm)}mm(${(cfg.maxRollMm / 10)}cm)까지만 제작 가능합니다`);
-    }
-    recalcPreview();
-  }
-
   function calcPlanB(wMm, hMm, qty, matKey) {
-    const isUnder1Sqm = (wMm <= 1000 && hMm <= 1000);
+    const longSide = Math.max(wMm, hMm);
+    const shortSide = Math.min(wMm, hMm);
+    const isUnder1Sqm = (longSide <= 1000 && shortSide <= 1000);
     let tierKey = 'over';
     let tierLabel = '견적상품 (1헤베 초과)';
 
     if (isUnder1Sqm) {
-      const minSide = Math.min(wMm, hMm);
-      const maxSide = Math.max(wMm, hMm);
-      if (minSide <= 210 && maxSide <= 297) { tierKey = 'a4_1'; tierLabel = STD_PRICES.a4_1.label; }
-      else if (minSide <= 297 && maxSide <= 420) { tierKey = 'a3_1'; tierLabel = STD_PRICES.a3_1.label; }
-      else if (minSide <= 600 && maxSide <= 900) { tierKey = 's600'; tierLabel = STD_PRICES.s600.label; }
-      else if (minSide <= 500 && maxSide <= 1000) { tierKey = 's1000_5'; tierLabel = STD_PRICES.s1000_5.label; }
+      if (shortSide <= 210 && longSide <= 297) { tierKey = 'a4_1'; tierLabel = STD_PRICES.a4_1.label; }
+      else if (shortSide <= 297 && longSide <= 420) { tierKey = 'a3_1'; tierLabel = STD_PRICES.a3_1.label; }
+      else if (shortSide <= 600 && longSide <= 900) { tierKey = 's600'; tierLabel = STD_PRICES.s600.label; }
+      else if (shortSide <= 500 && longSide <= 1000) { tierKey = 's1000_5'; tierLabel = STD_PRICES.s1000_5.label; }
       else { tierKey = 's1000'; tierLabel = STD_PRICES.s1000.label; }
     }
 
@@ -1049,8 +1038,8 @@
         printSubtotal = unitPrint * qty;
       }
     } else {
-      const wFactor = 1 + (wMm / 1000);
-      const hFactor = Math.max(1, hMm / 1000);
+      const wFactor = 1 + (longSide / 1000);
+      const hFactor = Math.max(1, shortSide / 1000);
       const totalFactor = wFactor * hFactor;
       const base1Sqm = cfg.overSqmRate + MAT_ADD[matKey];
       const rawUnit = base1Sqm * totalFactor;
@@ -1059,7 +1048,7 @@
       tierLabel = `견적상품 (${totalFactor.toFixed(2)}배)`;
     }
 
-    return { tierKey, tierLabel, unitPrint, printSubtotal, isSetApplied };
+    return { tierKey, tierLabel, unitPrint, printSubtotal, isSetApplied, longSide, shortSide };
   }
 
   function getCurrentInputs() {
@@ -1077,28 +1066,29 @@
     const total = res.printSubtotal + state.design;
 
     const alerts = [];
-    if (hMm > cfg.maxRollMm) {
+    if (res.shortSide > cfg.maxRollMm) {
       alerts.push(
-        `<div class="alert alert-danger">⛔ <strong>제작 불가:</strong> 세로(폭)는 최대 ${fmt(cfg.maxRollMm)}mm까지만 제작 가능합니다.</div>`
+        `<div class="alert alert-danger">⛔ <strong>제작 불가:</strong> 가로·세로 중 최소 한 변(폭)은 ${fmt(cfg.maxRollMm)}mm 이하이어야 합니다. (현재 짧은 변 ${fmt(res.shortSide)}mm)</div>`
       );
     } else if (res.tierKey === 'over') {
-      const wFactor = 1 + (wMm / 1000);
-      const hFactor = Math.max(1, hMm / 1000);
+      const wFactor = 1 + (res.longSide / 1000);
+      const hFactor = Math.max(1, res.shortSide / 1000);
       const totalFactor = wFactor * hFactor;
       const base1Sqm = cfg.overSqmRate + MAT_ADD[state.mat];
+      const swappedNote = wMm < hMm ? ` · 🔄 자동정렬(${fmt(res.longSide)}×${fmt(res.shortSide)})` : '';
       alerts.push(
-        `<div class="alert alert-info">📐 <strong>견적상품 (1헤베 초과):</strong> 헤베단가(${fmt(base1Sqm)}원) × 가로배수(${wFactor.toFixed(2)}) × 세로배수(${hFactor.toFixed(2)}) = <strong>${totalFactor.toFixed(2)}배</strong> 적용</div>`
+        `<div class="alert alert-info">📐 <strong>견적상품 (1헤베 초과${swappedNote}):</strong> 헤베단가(${fmt(base1Sqm)}원) × 긴변배수(${wFactor.toFixed(2)}) × 짧은변배수(${hFactor.toFixed(2)}) = <strong>${totalFactor.toFixed(2)}배</strong></div>`
       );
     }
     document.getElementById('alert-area').innerHTML = alerts.join('');
 
-    document.getElementById('prev-total').textContent = `${fmt(total)}원`;
-    document.getElementById('prev-tier').textContent = res.tierLabel;
+    document.getElementById('prev-total').textContent = res.shortSide > cfg.maxRollMm ? '제작 불가' : `${fmt(total)}원`;
+    document.getElementById('prev-tier').textContent = res.shortSide > cfg.maxRollMm ? `폭 ${fmt(cfg.maxRollMm)}mm 초과` : res.tierLabel;
 
     document.getElementById('bd-mat-name').textContent = MAT_LABELS[state.mat];
-    document.getElementById('bd-unit-print').textContent = res.isSetApplied ? '세트 할인가' : `${fmt(res.unitPrint)}원`;
+    document.getElementById('bd-unit-print').textContent = res.shortSide > cfg.maxRollMm ? '-' : (res.isSetApplied ? '세트 할인가' : `${fmt(res.unitPrint)}원`);
     document.getElementById('bd-qty-lbl').textContent = `${fmt(qty)}장`;
-    document.getElementById('bd-print-sub').textContent = `${fmt(res.printSubtotal)}원`;
+    document.getElementById('bd-print-sub').textContent = res.shortSide > cfg.maxRollMm ? '-' : `${fmt(res.printSubtotal)}원`;
     document.getElementById('bd-design').textContent = `${fmt(state.design)}원`;
   }
 
@@ -1108,15 +1098,17 @@
       showToast('가로와 세로 사이즈를 입력해주세요');
       return;
     }
-    if (hMm > cfg.maxRollMm) {
-      showToast(`세로는 최대 ${fmt(cfg.maxRollMm)}mm까지만 제작 가능합니다`);
+    const shortSide = Math.min(wMm, hMm);
+    const longSide = Math.max(wMm, hMm);
+    if (shortSide > cfg.maxRollMm) {
+      showToast(`최소 한 변은 ${fmt(cfg.maxRollMm)}mm 이하만 제작 가능합니다`);
       return;
     }
     const res = calcPlanB(wMm, hMm, qty, state.mat);
     cart.push({
       id: Date.now() + Math.random(),
       type: 'sheet',
-      sizeText: `${wMm}×${hMm}mm`,
+      sizeText: `${longSide}×${shortSide}mm`,
       tierLabel: res.tierLabel,
       matLabel: MAT_LABELS[state.mat],
       qty,
@@ -1357,7 +1349,6 @@
     document.getElementById('cfg-set-discount').value = String(cfg.useSetDiscount);
     document.getElementById('cfg-max-roll').value = cfg.maxRollMm;
     document.getElementById('cfg-extra-set').value = cfg.extraSetUnit;
-    document.getElementById('inp-h').max = state.unit === 'cm' ? (cfg.maxRollMm / 10) : cfg.maxRollMm;
   }
 
   function setUnit(u) {
@@ -1374,7 +1365,6 @@
       hEl.value = Math.round(hVal * 10);
     }
     state.unit = u;
-    document.getElementById('inp-h').max = u === 'cm' ? (cfg.maxRollMm / 10) : cfg.maxRollMm;
     document.getElementById('unit-mm').classList.toggle('active', u === 'mm');
     document.getElementById('unit-cm').classList.toggle('active', u === 'cm');
     document.querySelectorAll('.unit-lbl').forEach(el => el.textContent = u);
